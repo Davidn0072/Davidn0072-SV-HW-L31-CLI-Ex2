@@ -8,6 +8,7 @@ export default function AddRecipe() {
   const [ingredients, setIngredients] = useState('');
   const [instructions, setInstructions] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
 
@@ -38,12 +39,12 @@ export default function AddRecipe() {
       return;
     }
     setAiLoading(true);
-    setError(null);
+    setAiError(null);
     try {
       const generated = await generateInstructions(trimmedTitle, ingredientsList);
       setInstructions(generated.slice(0, 200));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate instructions');
+      setAiError(err instanceof Error ? err.message : 'Failed to generate instructions');
     } finally {
       setAiLoading(false);
     }
@@ -52,6 +53,7 @@ export default function AddRecipe() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setAiError(null);
 
     const validationError = validate();
     if (validationError) {
@@ -110,7 +112,7 @@ export default function AddRecipe() {
           <label htmlFor="instructions" className="mb-1 block text-base font-semibold text-slate-900">
             Instructions
           </label>
-          <div className="mb-2 flex justify-end">
+          <div className="mb-2 flex flex-col items-end gap-1">
             <button
               type="button"
               onClick={handleGetInstructions}
@@ -119,6 +121,7 @@ export default function AddRecipe() {
             >
               {aiLoading ? 'Generating...' : 'Get instructions by AI'}
             </button>
+            {aiError && <p className="text-sm text-red-600">{aiError}</p>}
           </div>
           <textarea
             id="instructions"

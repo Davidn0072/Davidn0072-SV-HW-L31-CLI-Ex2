@@ -13,13 +13,63 @@ function logFetch(url: string): void {
   console.log('[FETCH]', { url, port });
 }
 
+function toDetailedError(
+  context: string,
+  err: unknown,
+  url: string
+): Error {
+  const msg = err instanceof Error ? err.message : String(err);
+
+  if (msg === 'Failed to fetch' || err instanceof TypeError) {
+    return new Error(
+      `${context}: לא ניתן להתחבר לשרת (${url}). ` +
+        'אפשרויות: 1) ה-backend כבוי או לא פרוס, 2) VITE_API_URL לא הוגדר ב-Vercel (אם הפרויקט פרוס שם), 3) אין חיבור אינטרנט, 4) חסימה של CORS/חומת אש. שגיאה מקורית: Failed to fetch'
+    );
+  }
+
+  return new Error(
+    err instanceof Error ? err.message : `${context}: ${String(err)}`
+  );
+}
+
+async function fetchWithDetails(
+  url: string,
+  opts?: RequestInit
+): Promise<Response> {
+  let res: Response;
+  try {
+    res = await fetch(url, opts);
+  } catch (err) {
+    throw toDetailedError('שגיאת רשת', err, url);
+  }
+
+  if (!res.ok) {
+    let body = '';
+    try {
+      const text = await res.text();
+      if (text) {
+        try {
+          const json = JSON.parse(text);
+          body = json?.message ? ` — ${json.message}` : ` — ${text}`;
+        } catch {
+          body = ` — ${text}`;
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+    throw new Error(
+      `שגיאת שרת (HTTP ${res.status}): ${res.statusText}${body}. URL: ${url}`
+    );
+  }
+
+  return res;
+}
+
 export async function fetchAllRecipes(): Promise<Recipe[]> {
   const url = `${config.API_URL}/recipes`;
   logFetch(url);
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error('Failed to fetch recipes');
-  }
+  const res = await fetchWithDetails(url);
   return res.json();
 }
 
@@ -30,23 +80,17 @@ export async function createRecipe(data: {
 }): Promise<void> {
   const url = `${config.API_URL}/recipes`;
   logFetch(url);
-  const res = await fetch(url, {
+  await fetchWithDetails(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  if (!res.ok) {
-    throw new Error('Failed to create recipe');
-  }
 }
 
 export async function deleteRecipe(id: string): Promise<void> {
   const url = `${config.API_URL}/recipes/${id}`;
   logFetch(url);
-  const res = await fetch(url, { method: 'DELETE' });
-  if (!res.ok) {
-    throw new Error('Failed to delete recipe');
-  }
+  await fetchWithDetails(url, { method: 'DELETE' });
 }
 
 export async function generateInstructions(
@@ -55,14 +99,11 @@ export async function generateInstructions(
 ): Promise<string> {
   const url = `${config.API_URL}/recipes/generate`;
   logFetch(url);
-  const res = await fetch(url, {
+  const res = await fetchWithDetails(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, ingredients }),
   });
-  if (!res.ok) {
-    throw new Error('Failed to generate instructions');
-  }
   const data = await res.json();
   return data.recipe ?? '';
 }

@@ -1,19 +1,29 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { fetchAllRecipes } from '../api/recipes';
 import type { Recipe } from '../api/recipes';
 
 export default function SearchRecipes() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [query, setQuery] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasFetched = useRef(false);
 
   useEffect(() => {
+    const q = query.trim();
+    if (!q) return;
+    if (hasFetched.current) return;
+
+    setError(null);
+    setLoading(true);
     fetchAllRecipes()
-      .then(setRecipes)
+      .then((data) => {
+        setRecipes(data);
+        hasFetched.current = true;
+      })
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load recipes'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [query]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -21,12 +31,26 @@ export default function SearchRecipes() {
     return recipes.filter((r) => r.title?.toLowerCase().includes(q));
   }, [recipes, query]);
 
-  if (loading) {
-    return <div className="text-slate-600">Loading recipes...</div>;
-  }
-
   if (error) {
-    return <div className="text-red-600">Error: {error}</div>;
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-slate-800">Search Recipes</h1>
+        <div className="flex items-center gap-2">
+          <label htmlFor="search" className="text-base font-semibold text-slate-900">
+            Recipe name
+          </label>
+          <input
+            id="search"
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Recipe name..."
+            className="max-w-md flex-1 rounded-lg border border-slate-300 px-4 py-2 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+          />
+        </div>
+        <p className="text-red-600">Error: {error}</p>
+      </div>
+    );
   }
 
   return (
@@ -45,8 +69,11 @@ export default function SearchRecipes() {
           className="max-w-md flex-1 rounded-lg border border-slate-300 px-4 py-2 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
         />
       </div>
+      {loading && <p className="text-slate-600">Loading recipes...</p>}
       <div className="flex flex-col gap-4">
-        {filtered.length === 0 ? (
+        {!query.trim() ? (
+          <p className="text-slate-600">Type a recipe name above to search.</p>
+        ) : filtered.length === 0 ? (
           <p className="text-slate-600">No matching recipes.</p>
         ) : (
           filtered.map((recipe) => (

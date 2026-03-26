@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { fetchAllRecipes, deleteRecipe } from '../api/recipes';
 import type { Recipe } from '../api/recipes';
 
@@ -59,13 +60,21 @@ export default function AllRecipes() {
             {recipe.instructions && (
               <p className="mt-2 text-sm text-slate-600">{recipe.instructions}</p>
             )}
-            <button
-              type="button"
-              onClick={() => handleDelete(recipe._id)}
-              className="mt-3 rounded bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
-            >
-              Delete
-            </button>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleDelete(recipe._id)}
+                className="rounded bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
+              >
+                Delete
+              </button>
+              <Link
+                to={`/edit-recipes/${recipe._id}`}
+                className="inline-flex rounded bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700"
+              >
+                Update
+              </Link>
+            </div>
           </article>
         ))}
       </div>

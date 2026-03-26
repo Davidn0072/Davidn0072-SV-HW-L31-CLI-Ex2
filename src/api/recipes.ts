@@ -87,6 +87,30 @@ export async function createRecipe(data: {
   });
 }
 
+export async function fetchRecipe(id: string): Promise<Recipe> {
+  const url = `${config.API_URL}/recipes/${id}`;
+  logFetch(url);
+  const res = await fetchWithDetails(url);
+  return res.json();
+}
+
+export async function updateRecipe(
+  id: string,
+  data: {
+    title: string;
+    ingredients: string[];
+    instructions: string;
+  }
+): Promise<void> {
+  const url = `${config.API_URL}/recipes/${id}`;
+  logFetch(url);
+  await fetchWithDetails(url, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+}
+
 export async function deleteRecipe(id: string): Promise<void> {
   const url = `${config.API_URL}/recipes/${id}`;
   logFetch(url);

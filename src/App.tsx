@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import AllRecipes from './pages/AllRecipes';
 import AddRecipe from './pages/AddRecipe';
+import EditRecipe from './pages/EditRecipe';
 import SearchRecipes from './pages/SearchRecipes';
 import './App.css';
 
@@ -15,6 +16,7 @@ function App() {
             <Route path="/" element={<AllRecipes />} />
             <Route path="/all-recipes" element={<AllRecipes />} />
             <Route path="/add-recipes" element={<AddRecipe />} />
+            <Route path="/edit-recipes/:id" element={<EditRecipe />} />
             <Route path="/search" element={<SearchRecipes />} />
           </Routes>
         </main>

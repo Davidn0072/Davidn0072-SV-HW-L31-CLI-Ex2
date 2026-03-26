@@ -70,7 +70,7 @@ export default function AllRecipes() {
               </button>
               <Link
                 to={`/edit-recipes/${recipe._id}`}
-                className="inline-flex rounded bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700"
+                className="inline-flex rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
               >
                 Update
               </Link>
